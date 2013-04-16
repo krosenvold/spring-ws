@@ -29,6 +29,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.xml.sax.CloseableInputSource;
 import org.springframework.xml.sax.SaxUtils;
 import org.springframework.xml.validation.XmlValidator;
 import org.springframework.xml.validation.XmlValidatorFactory;
@@ -134,13 +135,18 @@ public class CommonsXsdSchemaCollection implements XsdSchemaCollection, Initiali
         for (Resource xsdResource : xsdResources) {
             Assert.isTrue(xsdResource.exists(), xsdResource + " does not exit");
             try {
-                XmlSchema xmlSchema =
-                        schemaCollection.read(SaxUtils.createInputSource(xsdResource));
-                xmlSchemas.add(xmlSchema);
+                CloseableInputSource inputSource = SaxUtils.createInputSource(xsdResource);
+                try {
+                    XmlSchema xmlSchema =
+                            schemaCollection.read(inputSource);
+                    xmlSchemas.add(xmlSchema);
 
-                if (inline) {
-                    inlineIncludes(xmlSchema, processedIncludes, processedImports);
-                    findImports(xmlSchema, processedImports, processedIncludes);
+                    if (inline) {
+                        inlineIncludes(xmlSchema, processedIncludes, processedImports);
+                        findImports(xmlSchema, processedImports, processedIncludes);
+                    }
+                } finally {
+                    inputSource.close();
                 }
             }
             catch (Exception ex) {
@@ -262,7 +268,7 @@ public class CommonsXsdSchemaCollection implements XsdSchemaCollection, Initiali
             return super.resolveEntity(namespace, schemaLocation, baseUri);
         }
 
-        private InputSource createInputSource(Resource resource) {
+        private CloseableInputSource createInputSource(Resource resource) {
             try {
                 return SaxUtils.createInputSource(resource);
             }

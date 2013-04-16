@@ -98,13 +98,18 @@ public class Wsdl11DestinationProvider extends AbstractCachingDestinationProvide
         try {
             DOMResult result = new DOMResult();
             Transformer transformer = transformerFactory.newTransformer();
-            transformer.transform(new ResourceSource(wsdlResource), result);
-            Document definitionDocument = (Document) result.getNode();
-            String location = locationXPathExpression.evaluateAsString(definitionDocument);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Found location [" + location + "] in " + wsdlResource);
+            ResourceSource xmlSource = new ResourceSource(wsdlResource);
+            try {
+                transformer.transform(xmlSource, result);
+                Document definitionDocument = (Document) result.getNode();
+                String location = locationXPathExpression.evaluateAsString(definitionDocument);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Found location [" + location + "] in " + wsdlResource);
+                }
+                return location != null ? URI.create(location) : null;
+            } finally {
+                xmlSource.close();
             }
-            return location != null ? URI.create(location) : null;
         }
         catch (IOException ex) {
             throw new WebServiceIOException("Error extracting location from WSDL [" + wsdlResource + "]", ex);

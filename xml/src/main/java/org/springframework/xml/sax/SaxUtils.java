@@ -16,6 +16,7 @@
 
 package org.springframework.xml.sax;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,6 +26,8 @@ import org.springframework.core.io.Resource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.InputSource;
+
+import javax.xml.transform.Source;
 
 /**
  * Convenient utility methods for dealing with SAX.
@@ -46,8 +49,8 @@ public abstract class SaxUtils {
      * @see InputSource#setSystemId(String)
      * @see #getSystemId(org.springframework.core.io.Resource)
      */
-    public static InputSource createInputSource(Resource resource) throws IOException {
-        InputSource inputSource = new InputSource(resource.getInputStream());
+    public static CloseableInputSource createInputSource(Resource resource) throws IOException {
+        CloseableInputSource inputSource = new CloseableInputSource(resource.getInputStream());
         inputSource.setSystemId(getSystemId(resource));
         return inputSource;
     }
@@ -67,4 +70,13 @@ public abstract class SaxUtils {
         }
     }
 
+    public static void closeSource(Source definitionSource) {
+        if (definitionSource instanceof Closeable){
+            try {
+                ((Closeable)definitionSource).close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }

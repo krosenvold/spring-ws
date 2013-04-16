@@ -34,6 +34,7 @@ import org.springframework.xml.xpath.XPathExpressionFactory;
 import org.springframework.xml.xsd.XsdSchema;
 
 import org.w3c.dom.Document;
+import org.springframework.xml.sax.SaxUtils;
 
 /**
  * Adapter to use the {@link XsdSchema} interface with the generic <code>DispatcherServlet</code>.
@@ -83,7 +84,11 @@ public class XsdSchemaHandlerAdapter extends LocationTransformerObjectSupport
 
     public long getLastModified(HttpServletRequest request, Object handler) {
         Source schemaSource = ((XsdSchema) handler).getSource();
+        try {
         return LastModifiedHelper.getLastModified(schemaSource);
+        } finally {
+            SaxUtils.closeSource(schemaSource);
+        }
     }
 
     public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)

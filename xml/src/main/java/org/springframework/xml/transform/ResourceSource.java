@@ -16,10 +16,12 @@
 
 package org.springframework.xml.transform;
 
+import java.io.Closeable;
 import java.io.IOException;
 import javax.xml.transform.sax.SAXSource;
 
 import org.springframework.core.io.Resource;
+import org.springframework.xml.sax.CloseableInputSource;
 import org.springframework.xml.sax.SaxUtils;
 
 import org.xml.sax.XMLReader;
@@ -31,7 +33,7 @@ import org.xml.sax.XMLReader;
  * @author Arjen Poutsma
  * @since 1.0.0
  */
-public class ResourceSource extends SAXSource {
+public class ResourceSource extends SAXSource implements Closeable {
 
     /**
      * Initializes a new instance of the <code>ResourceSource</code> with the given resource.
@@ -39,7 +41,7 @@ public class ResourceSource extends SAXSource {
      * @param content the content
      */
     public ResourceSource(Resource content) throws IOException {
-        super(SaxUtils.createInputSource(content));
+        super(createInputSource(content));
     }
 
     /**
@@ -48,6 +50,14 @@ public class ResourceSource extends SAXSource {
      * @param content the content
      */
     public ResourceSource(XMLReader reader, Resource content) throws IOException {
-        super(reader, SaxUtils.createInputSource(content));
+        super(reader, createInputSource(content));
+    }
+
+    private static CloseableInputSource createInputSource(Resource content) throws IOException {
+        return SaxUtils.createInputSource(content);
+    }
+
+    public void close() throws IOException {
+        ((CloseableInputSource)getInputSource()).close();
     }
 }

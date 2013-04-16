@@ -30,6 +30,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.HandlerAdapter;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.ws.wsdl.WsdlDefinition;
+import org.springframework.xml.sax.SaxUtils;
 import org.springframework.xml.xpath.XPathExpression;
 import org.springframework.xml.xpath.XPathExpressionFactory;
 
@@ -126,7 +127,11 @@ public class WsdlDefinitionHandlerAdapter extends LocationTransformerObjectSuppo
 
     public long getLastModified(HttpServletRequest request, Object handler) {
         Source definitionSource = ((WsdlDefinition) handler).getSource();
-        return LastModifiedHelper.getLastModified(definitionSource);
+        try {
+           return LastModifiedHelper.getLastModified(definitionSource);
+        } finally {
+            SaxUtils.closeSource( definitionSource);
+        }
     }
 
     public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -136,8 +141,8 @@ public class WsdlDefinitionHandlerAdapter extends LocationTransformerObjectSuppo
 
             Transformer transformer = createTransformer();
             Source definitionSource = definition.getSource();
-
-            if (transformLocations || transformSchemaLocations) {
+            try {
+                if (transformLocations || transformSchemaLocations) {
                 DOMResult domResult = new DOMResult();
                 transformer.transform(definitionSource, domResult);
                 Document definitionDocument = (Document) domResult.getNode();
@@ -153,6 +158,9 @@ public class WsdlDefinitionHandlerAdapter extends LocationTransformerObjectSuppo
             response.setContentType(CONTENT_TYPE);
             StreamResult responseResult = new StreamResult(response.getOutputStream());
             transformer.transform(definitionSource, responseResult);
+            } finally {
+                SaxUtils.closeSource( definitionSource );
+            }
         }
         else {
             response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);

@@ -141,16 +141,24 @@ public class PayloadTransformingInterceptor extends TransformerObjectSupport
             if (logger.isInfoEnabled()) {
                 logger.info("Transforming request using " + requestXslt);
             }
-            Source requestSource = new ResourceSource(xmlReader, requestXslt);
-            requestTemplates = transformerFactory.newTemplates(requestSource);
+            ResourceSource requestSource = new ResourceSource(xmlReader, requestXslt);
+            try {
+               requestTemplates = transformerFactory.newTemplates(requestSource);
+            } finally {
+               requestSource.close();
+            }
         }
         if (responseXslt != null) {
             Assert.isTrue(responseXslt.exists(), "responseXslt \"" + responseXslt + "\" does not exit");
             if (logger.isInfoEnabled()) {
                 logger.info("Transforming response using " + responseXslt);
             }
-            Source responseSource = new ResourceSource(xmlReader, responseXslt);
-            responseTemplates = transformerFactory.newTemplates(responseSource);
+            ResourceSource responseSource = new ResourceSource(xmlReader, responseXslt);
+            try {
+               responseTemplates = transformerFactory.newTemplates(responseSource);
+            } finally {
+               responseSource.close();
+            }
         }
     }
 }

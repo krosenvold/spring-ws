@@ -28,7 +28,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.xml.namespace.QNameUtils;
-import org.springframework.xml.sax.CloseableInputSource;
 import org.springframework.xml.sax.SaxUtils;
 import org.springframework.xml.validation.XmlValidator;
 import org.springframework.xml.validation.XmlValidatorFactory;
@@ -111,19 +110,14 @@ public class SimpleXsdSchema implements XsdSchema, InitializingBean {
     }
 
     private void loadSchema(DocumentBuilder documentBuilder) throws SAXException, IOException {
-        CloseableInputSource inputSource = SaxUtils.createInputSource(xsdResource);
-        try {
-            Document schemaDocument = documentBuilder.parse(inputSource);
-            schemaElement = schemaDocument.getDocumentElement();
-            Assert.isTrue(SCHEMA_NAME.getLocalPart().equals(schemaElement.getLocalName()),
-                    xsdResource + " has invalid root element : [" + schemaElement.getLocalName() + "] instead of [schema]");
-            Assert.isTrue(SCHEMA_NAME.getNamespaceURI().equals(schemaElement.getNamespaceURI()), xsdResource +
-                    " has invalid root element: [" + schemaElement.getNamespaceURI() + "] instead of [" +
-                    SCHEMA_NAME.getNamespaceURI() + "]");
-            Assert.hasText(getTargetNamespace(), xsdResource + " has no targetNamespace");
-        } finally {
-            inputSource.close();
-        }
+        Document schemaDocument = documentBuilder.parse(SaxUtils.createInputSource(xsdResource));
+        schemaElement = schemaDocument.getDocumentElement();
+        Assert.isTrue(SCHEMA_NAME.getLocalPart().equals(schemaElement.getLocalName()),
+                xsdResource + " has invalid root element : [" + schemaElement.getLocalName() + "] instead of [schema]");
+        Assert.isTrue(SCHEMA_NAME.getNamespaceURI().equals(schemaElement.getNamespaceURI()), xsdResource +
+                " has invalid root element: [" + schemaElement.getNamespaceURI() + "] instead of [" +
+                SCHEMA_NAME.getNamespaceURI() + "]");
+        Assert.hasText(getTargetNamespace(), xsdResource + " has no targetNamespace");
     }
 
     public String toString() {
